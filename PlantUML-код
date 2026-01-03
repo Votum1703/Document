@@ -1,0 +1,35 @@
+@startuml
+title PUSH-уведомления для интернет-магазина "Петрушка Зеленая"
+autonumber
+skinparam shadowing false
+
+actor "Пользователь" as User
+participant "Мобильное приложение" as Mobile
+participant "FCM / APNs\n(пуш-провайдер)" as Provider
+participant "Backend API" as Backend
+participant "Сервис уведомлений" as Notify
+database "БД\n(пользователи, токены)" as DB
+
+== Регистрация токена ==
+
+User -> Mobile : Запуск приложения
+Mobile -> Provider : Получить device token
+Provider --> Mobile : device token
+
+Mobile -> Backend : POST /devices/register\n{userId, token}
+Backend -> DB : сохранить токен
+DB --> Backend : OK
+Backend --> Mobile : 200 OK
+
+== Отправка PUSH ==
+
+Backend -> Notify : запрос на отправку уведомления
+Notify -> DB : получить токен пользователя
+DB --> Notify : token
+
+Notify -> Provider : отправка push
+Provider --> Mobile : push-уведомление
+
+Notify -> DB : сохранить результат отправки
+
+@enduml
